@@ -15,6 +15,24 @@ class ExchangeBase(abc.ABC):
         self.config = config
         self.logger = logging.getLogger(f"{self.__class__.__name__}")
 
+    def _normalize_quantity(self, quantity: float, symbol_info: Dict[str, Any]) -> float:
+        """将数量转换为交易所最小单位
+        :param quantity: 用户输入的数量（如1 BTC）
+        :param symbol_info: 合约信息（包含 `min_quantity`）
+        :return: 转换为最小单位的整数（如聪）
+        """
+        min_step = symbol_info["min_quantity"]
+        return round(quantity * (1 / min_step))  # 根据精度调整
+
+    def _denormalize_quantity(self, quantity: int, symbol_info: Dict[str, Any]) -> float:
+        """将最小单位转换为可读数量
+        :param quantity: 最小单位整数
+        :param symbol_info: 合约信息
+        :return: 格式化后的数量（如0.001 BTC）
+        """
+        step_size = symbol_info["step_size"]
+        return quantity * step_size
+
     @abc.abstractmethod
     def get_symbol_info(self, symbol: str) -> Dict[str, Any]:
         """获取交易对信息（如最小交易量、合约精度）
